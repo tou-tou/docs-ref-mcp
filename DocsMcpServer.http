@@ -1,0 +1,6 @@
+@DocsMcpServer_HostAddress = http://localhost:5252
+
+GET {{DocsMcpServer_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

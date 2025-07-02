@@ -1,0 +1,15 @@
+[submodule "docs/repos/R3"]
+	path = docs/repos/R3
+	url = https://github.com/Cysharp/R3.git
+[submodule "docs/repos/UniVRM"]
+	path = docs/repos/UniVRM
+	url = https://github.com/vrm-c/UniVRM.git
+[submodule "docs/repos/vrm-specification"]
+	path = docs/repos/vrm-specification
+	url = https://github.com/vrm-c/vrm-specification.git
+[submodule "docs/repos/UniTask"]
+	path = docs/repos/UniTask
+	url = git@github.com:Cysharp/UniTask.git
+[submodule "docs/repos/VContainer"]
+	path = docs/repos/VContainer
+	url = git@github.com:hadashiA/VContainer.git

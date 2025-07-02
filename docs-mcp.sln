@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocsMcpServer", "DocsMcpServer.csproj", "{F6B7B535-B4B5-5EC8-79D7-53704D8B5F2C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F6B7B535-B4B5-5EC8-79D7-53704D8B5F2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6B7B535-B4B5-5EC8-79D7-53704D8B5F2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6B7B535-B4B5-5EC8-79D7-53704D8B5F2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6B7B535-B4B5-5EC8-79D7-53704D8B5F2C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7C18AE69-ADE2-4014-A641-50B7D7D6A390}
+	EndGlobalSection
+EndGlobal
