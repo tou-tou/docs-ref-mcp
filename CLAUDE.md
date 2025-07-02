@@ -32,7 +32,7 @@ The project follows a modular architecture with HTTP-based MCP implementation:
 
 ```bash
 # Build the project
-dotnet build DocsMcpServer.csproj
+dotnet build DocsRef.csproj
 
 # Run the server (default port 7334)
 dotnet run
@@ -85,7 +85,7 @@ When `DOCS_SMART_FILTER=true` (default), source files are included even if .giti
 claude mcp add --transport http docs-ref http://127.0.0.1:7334/mcp/
 
 # For development with automatic restart
-pkill -f DocsMcpServer && dotnet run
+pkill -f DocsRef && dotnet run
 ```
 
 ## Token Limit Handling

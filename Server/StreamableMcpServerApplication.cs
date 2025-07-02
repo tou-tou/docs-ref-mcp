@@ -6,12 +6,12 @@ using System.Text.Json.Nodes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
-using DocsMcpServer.Core;
+using DocsRef.Core;
 
-namespace DocsMcpServer.Server;
+namespace DocsRef.Server;
 
 /// <summary>
-/// MCP server implementation based on UnityNaturalMCP architecture
+/// HTTP-based MCP server implementation for streaming communication
 /// </summary>
 public sealed class StreamableMcpServerApplication : IDisposable
 {
@@ -33,23 +33,14 @@ public sealed class StreamableMcpServerApplication : IDisposable
         _cancellationTokenSource?.Dispose();
     }
 
-    public async Task RunAsync(string ipAddress = "127.0.0.1", int port = 5001, CancellationToken cancellationToken = default)
+    public async Task RunAsync(string ipAddress = "127.0.0.1", int port = 7334, CancellationToken cancellationToken = default)
     {
         _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var token = _cancellationTokenSource.Token;
 
-        // Add both with and without trailing slash for compatibility
+        // Configure HTTP endpoint
         var mcpEndpoint = $"http://{ipAddress}:{port}/mcp/";
-        var mcpEndpointNoSlash = $"http://{ipAddress}:{port}/mcp";
         _httpListener.Prefixes.Add(mcpEndpoint);
-        try
-        {
-            _httpListener.Prefixes.Add(mcpEndpointNoSlash);
-        }
-        catch
-        {
-            // Ignore if already added
-        }
         _httpListener.Start();
         
         _logger.LogInformation($"Started MCP server at {mcpEndpoint}");
@@ -101,8 +92,6 @@ public sealed class StreamableMcpServerApplication : IDisposable
                                 using var inputReader = new StreamReader(request.InputStream, Encoding.UTF8);
                                 var inputBody = await inputReader.ReadLineAsync();
                                 
-                                _logger.LogDebug($"Received request: {inputBody}");
-                                
                                 if (string.IsNullOrWhiteSpace(inputBody))
                                 {
                                     response.StatusCode = 400;
@@ -113,35 +102,33 @@ public sealed class StreamableMcpServerApplication : IDisposable
                                 var inputBodyJson = JsonNode.Parse(inputBody);
                                 if (inputBodyJson?["method"]?.ToString() != "notifications/initialized")
                                 {
-                                    // Add clientInfo if missing (workaround for Claude's /mcp command)
-                                    if (inputBodyJson?["method"]?.ToString() == "initialize" && 
-                                        inputBodyJson["params"] != null && 
-                                        inputBodyJson["params"]["clientInfo"] == null)
+                                    // Ensure clientInfo is present for initialize requests
+                                    if (inputBodyJson?["method"]?.ToString() == "initialize" && inputBodyJson["params"] is JsonObject paramsObj)
                                     {
-                                        inputBodyJson["params"]["clientInfo"] = new JsonObject
+                                        if (paramsObj["clientInfo"] == null)
                                         {
-                                            ["name"] = "claude-code",
-                                            ["version"] = "1.0.0"
-                                        };
-                                        inputBody = inputBodyJson.ToJsonString();
-                                        _logger.LogDebug($"Added missing clientInfo to initialize request");
+                                            paramsObj["clientInfo"] = new JsonObject
+                                            {
+                                                ["name"] = "claude-code",
+                                                ["version"] = "1.0.0"
+                                            };
+                                            inputBody = inputBodyJson.ToJsonString();
+                                        }
                                     }
                                     
-                                    _logger.LogDebug($"Writing to pipe: {inputBody}");
+                                    // Write request to MCP server
                                     await clientToServerPipe.Writer.WriteAsync(Encoding.UTF8.GetBytes(inputBody + "\n"), token);
                                     await clientToServerPipe.Writer.FlushAsync(token);
 
-                                    _logger.LogDebug("Waiting for response from MCP server...");
+                                    // Read response from MCP server
                                     var result = await serverToClientPipe.Reader.ReadAsync(token);
                                     var buffer = result.Buffer;
-                                    _logger.LogDebug($"Read {buffer.Length} bytes from pipe");
                                     
                                     var resultBody = Encoding.UTF8.GetString(buffer.ToArray());
                                     serverToClientPipe.Reader.AdvanceTo(buffer.End);
 
+                                    // Send response with newline for streaming HTTP protocol
                                     response.ContentType = "application/json";
-                                    _logger.LogDebug($"Sending response: {resultBody}");
-                                    // Add newline for streaming HTTP protocol compatibility
                                     await response.OutputStream.WriteAsync(Encoding.UTF8.GetBytes(resultBody + "\n"), token);
                                 }
                                 response.Close();
@@ -149,7 +136,7 @@ public sealed class StreamableMcpServerApplication : IDisposable
                             }
                         case "GET":
                             {
-                                // Handle dynamic client registration for Claude Code
+                                // Return server information for dynamic client registration
                                 var serverInfo = new
                                 {
                                     name = "docs-ref",

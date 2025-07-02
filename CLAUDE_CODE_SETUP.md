@@ -1,4 +1,4 @@
-# Claude CodeでDocsMcpServerを使用する方法
+# Claude CodeでDocsRefを使用する方法
 
 ## 方法1: dotnet runを使用（開発時）
 
@@ -7,7 +7,7 @@
 claude mcp add --transport http docs-csharp http://localhost:5000/mcp
 
 # 別のターミナルでサーバーを起動
-cd /path/to/DocsMcpServer
+cd /path/to/DocsRef
 DOCS_BASE_DIR=/path/to/your/docs dotnet run
 ```
 
@@ -16,7 +16,7 @@ DOCS_BASE_DIR=/path/to/your/docs dotnet run
 ### 1. 実行ファイルをビルド
 
 ```bash
-cd DocsMcpServer
+cd DocsRef
 
 # Linux/macOS用
 dotnet publish -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o ./publish/linux
@@ -31,21 +31,21 @@ dotnet publish -c Release -r osx-x64 --self-contained -p:PublishSingleFile=true 
 ### 2. 実行権限を付与（Linux/macOS）
 
 ```bash
-chmod +x ./publish/linux/DocsMcpServer
+chmod +x ./publish/linux/DocsRef
 ```
 
 ### 3. Claude Codeに登録
 
 ```bash
 # 実行ファイルを直接指定
-claude mcp add docs-csharp -e DOCS_BASE_DIR=/path/to/your/docs -- /path/to/DocsMcpServer/publish/linux/DocsMcpServer
+claude mcp add docs-csharp -e DOCS_BASE_DIR=/path/to/your/docs -- /path/to/DocsRef/publish/linux/DocsRef
 
 # 環境変数を複数設定する場合
 claude mcp add docs-csharp \
   -e DOCS_BASE_DIR=/path/to/your/docs \
   -e DOCS_FOLDERS=api,guides \
   -e DOCS_MAX_CHARS_PER_PAGE=5000 \
-  -- /path/to/DocsMcpServer/publish/linux/DocsMcpServer
+  -- /path/to/DocsRef/publish/linux/DocsRef
 ```
 
 ## 方法3: シェルスクリプトを使用
@@ -55,7 +55,7 @@ claude mcp add docs-csharp \
 ```bash
 cat > start-docs-mcp.sh << 'EOF'
 #!/bin/bash
-cd /path/to/DocsMcpServer
+cd /path/to/DocsRef
 export DOCS_BASE_DIR="${DOCS_BASE_DIR:-/path/to/default/docs}"
 dotnet run --urls "http://localhost:5000"
 EOF
@@ -79,7 +79,7 @@ WORKDIR /app
 COPY ./publish/linux .
 ENV ASPNETCORE_URLS=http://+:5000
 EXPOSE 5000
-ENTRYPOINT ["./DocsMcpServer"]
+ENTRYPOINT ["./DocsRef"]
 ```
 
 ### 2. Dockerイメージをビルド
@@ -151,7 +151,7 @@ claude --log-level debug
 # プロジェクトスコープで追加
 claude mcp add docs-csharp -s project \
   -e DOCS_BASE_DIR=./docs \
-  -- dotnet run --project ./DocsMcpServer
+  -- dotnet run --project ./DocsRef
 
 # .mcp.jsonファイルが作成される
 cat .mcp.json

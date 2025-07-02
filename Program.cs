@@ -1,6 +1,6 @@
-using DocsMcpServer.Core;
-using DocsMcpServer.Server;
-using DocsMcpServer.Tools;
+using DocsRef.Core;
+using DocsRef.Server;
+using DocsRef.Tools;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -13,17 +13,11 @@ services.AddLogging(builder =>
     builder.ClearProviders();
     builder.AddConsole();
     
-    // Check for log level environment variable
-    var logLevelEnv = Environment.GetEnvironmentVariable("LOGGING__LOGLEVEL__DEFAULT") ?? 
-                      Environment.GetEnvironmentVariable("Logging__LogLevel__Default");
-    
-    if (Enum.TryParse<LogLevel>(logLevelEnv, true, out var logLevel))
+    // Set log level from environment or default to Information
+    var logLevelStr = Environment.GetEnvironmentVariable("LOGGING__LOGLEVEL__DEFAULT") ?? "Information";
+    if (Enum.TryParse<LogLevel>(logLevelStr, true, out var logLevel))
     {
         builder.SetMinimumLevel(logLevel);
-    }
-    else
-    {
-        builder.SetMinimumLevel(LogLevel.Information);
     }
 });
 
@@ -74,13 +68,13 @@ DocTools.Initialize(documentManager);
 // Create and run MCP server
 using var mcpServer = serviceProvider.GetRequiredService<StreamableMcpServerApplication>();
 
+// Configuration constants
+const int DEFAULT_PORT = 7334; // REF (Reference) - documentation reference server
+
 // Get port from environment variable or use default
-var port = 7334; // REF (Reference) port - indicates documentation reference server
-var portEnv = Environment.GetEnvironmentVariable("MCP_PORT");
-if (!string.IsNullOrEmpty(portEnv) && int.TryParse(portEnv, out var envPort))
-{
-    port = envPort;
-}
+var port = int.TryParse(Environment.GetEnvironmentVariable("MCP_PORT"), out var envPort) 
+    ? envPort 
+    : DEFAULT_PORT;
 
 // Run the server
 var cts = new CancellationTokenSource();

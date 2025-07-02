@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace DocsMcpServer.Core;
+namespace DocsRef.Core;
 
 /// <summary>
 /// Parser for .gitignore patterns

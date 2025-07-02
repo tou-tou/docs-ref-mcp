@@ -33,7 +33,7 @@ docs-mcp/
 ├── scripts/                    # ユーティリティスクリプト
 │   ├── update-docs.sh          # Unix/Linux用 submodule 更新
 │   └── update-docs.ps1         # Windows用 submodule 更新
-├── DocsMcpServer.csproj        # プロジェクトファイル
+├── DocsRef.csproj              # プロジェクトファイル
 ├── docs-mcp.sln                # ソリューションファイル
 ├── Program.cs                  # エントリーポイント
 └── README.md                   # このファイル
@@ -272,7 +272,7 @@ git commit -m "Update R3 to latest version"
 
 ```bash
 # 既存のプロセスを終了
-pkill -f DocsMcpServer
+pkill -f DocsRef
 
 # サーバーを再起動
 dotnet run

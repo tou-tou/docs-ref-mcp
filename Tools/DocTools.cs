@@ -1,9 +1,9 @@
 using System.ComponentModel;
 using System.Threading.Tasks;
-using DocsMcpServer.Core;
+using DocsRef.Core;
 using ModelContextProtocol.Server;
 
-namespace DocsMcpServer.Tools;
+namespace DocsRef.Tools;
 
 [McpServerToolType, Description("Documentation management tools")]
 public static class DocTools

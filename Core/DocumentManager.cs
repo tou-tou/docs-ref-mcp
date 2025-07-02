@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace DocsMcpServer.Core;
+namespace DocsRef.Core;
 
 public class DocumentManager
 {
