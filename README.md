@@ -9,6 +9,7 @@
 - ⚡ **高速検索**: 正規表現による全文検索とフィルタリング機能
 - 📄 **ページネーション**: 大きなファイルの効率的な処理
 - 🛠️ **柔軟な設定**: 環境変数による細かい動作制御
+- 🌐 **Webページ取り込み**: リファクタリングやコードスメルの参考資料をMarkdownに変換して保存
 
 ## 構成
 
@@ -16,11 +17,20 @@
 docs-mcp/
 ├── Core/                       # ドキュメント管理のコアロジック
 │   ├── DocumentManager.cs      # ドキュメントの読み込みとキャッシュ管理
-│   └── GitIgnoreParser.cs      # .gitignore パターンの解析
+│   ├── GitIgnoreParser.cs      # .gitignore パターンの解析
+│   ├── WebPageDownloader.cs    # HTTPリクエスト処理
+│   ├── HtmlToMarkdownConverter.cs # HTML→Markdown変換
+│   └── Models/                 # データモデル
+│       └── WebDocument.cs      # Webドキュメントモデル
 ├── Server/                     # MCP サーバー実装
 │   └── StreamableMcpServerApplication.cs
 ├── Tools/                      # MCP ツール実装
-│   └── DocTools.cs
+│   ├── DocTools.cs             # ドキュメント管理ツール
+│   └── WebTools.cs             # Webページ取り込みツール
+├── Cli/                        # CLI実装
+│   ├── CliCommands.cs          # コマンド定義
+│   ├── WebCommands.cs          # Web操作のCLI
+│   └── DocCommands.cs          # ドキュメント操作のCLI
 ├── Properties/                 # プロジェクト設定
 ├── docs/                       # ドキュメントルート
 │   ├── repos/                  # Git submodule で管理されるリポジトリ
@@ -29,10 +39,15 @@ docs-mcp/
 │   │   ├── VContainer/
 │   │   ├── UniVRM/
 │   │   └── vrm-specification/
-│   └── manual/                 # 手動で管理するドキュメント
+│   ├── manual/                 # 手動で管理するドキュメント
+│   └── web/                    # Webから取り込んだドキュメント
 ├── scripts/                    # ユーティリティスクリプト
 │   ├── update-docs.sh          # Unix/Linux用 submodule 更新
-│   └── update-docs.ps1         # Windows用 submodule 更新
+│   ├── update-docs.ps1         # Windows用 submodule 更新
+│   └── examples/               # CLI使用例のスクリプト
+│       ├── fetch-refactoring-resources.sh
+│       ├── search-async-patterns.sh
+│       └── batch-operations.sh
 ├── DocsRef.csproj              # プロジェクトファイル
 ├── docs-mcp.sln                # ソリューションファイル
 ├── Program.cs                  # エントリーポイント
@@ -85,6 +100,10 @@ dotnet run
 | `DOCS_SMART_FILTER` | スマートフィルタを使用（ソースファイルのみ抽出） | true |
 | `DOCS_MAX_CHARS_PER_PAGE` | ページあたりの最大文字数 | 10000 |
 | `DOCS_LARGE_FILE_THRESHOLD` | 大きいファイルの閾値 | 15000 |
+| `WEB_CACHE_DIR` | Webドキュメントの保存先 | docs/web |
+| `WEB_USER_AGENT` | HTTP リクエストのUser-Agent | Mozilla/5.0... |
+| `WEB_TIMEOUT` | HTTPリクエストのタイムアウト（秒） | 30 |
+| `WEB_MAX_RETRIES` | HTTPリクエストの最大リトライ回数 | 3 |
 
 ### 使用例
 
@@ -101,6 +120,106 @@ DOCS_SMART_FILTER=false dotnet run
 異なるポートで起動：
 ```bash
 MCP_PORT=8080 dotnet run
+```
+
+## CLI モード（コマンドライン）
+
+DocsRef は MCP サーバーとしてだけでなく、強力なコマンドラインツールとしても使用できます。
+
+### 基本的な使い方
+
+```bash
+# ヘルプを表示
+dotnet run -- --help
+
+# Webページを取り込む
+dotnet run -- web fetch https://example.com/article --category tutorials
+
+# ドキュメントを検索
+dotnet run -- docs grep "async" --output json
+
+# サーバーモードで起動（デフォルト）
+dotnet run
+# または明示的に
+dotnet run -- server --port 7334
+```
+
+### 実行可能ファイルとして発行
+
+```bash
+# Linux/Mac用
+dotnet publish -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o ./publish
+
+# Windows用
+dotnet publish -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o ./publish
+
+# 使用例
+./publish/DocsRef web fetch https://example.com/article
+```
+
+### CLI コマンド一覧
+
+#### Web コマンド
+
+```bash
+# 単一ページの取り込み
+docsref web fetch <url> [--category <category>] [--tags <tags>] [--output json]
+
+# 複数ページの一括取り込み
+docsref web fetch-batch <url1,url2,...> [--category <category>] [--output json]
+
+# 取り込み済みドキュメントの一覧
+docsref web list [--category <category>] [--output json]
+
+# おすすめリソースの表示
+docsref web suggest [--output json]
+```
+
+#### Docs コマンド
+
+```bash
+# ドキュメント一覧
+docsref docs list [--pattern <pattern>] [--directory <dir>] [--max <count>] [--output json]
+
+# リポジトリ統計
+docsref docs summary [--output json]
+
+# ディレクトリツリー表示
+docsref docs tree [--directory <dir>] [--depth <depth>] [--output json]
+
+# ドキュメント取得
+docsref docs get <path> [--page <page>] [--output json]
+
+# 正規表現検索
+docsref docs grep <pattern> [--case-sensitive] [--output json]
+```
+
+### シェルスクリプトでの活用例
+
+提供されているサンプルスクリプト：
+
+```bash
+# リファクタリング資料を一括ダウンロード
+./scripts/examples/fetch-refactoring-resources.sh
+
+# 非同期パターンを検索
+./scripts/examples/search-async-patterns.sh
+
+# バッチ処理の例
+./scripts/examples/batch-operations.sh
+```
+
+### JSON 出力の活用
+
+```bash
+# jq と組み合わせて使用
+docsref docs grep "TODO" --output json | jq '.files[].file'
+
+# PowerShell での例
+docsref docs list --pattern "*.cs" --output json | ConvertFrom-Json | Select-Object -ExpandProperty files
+
+# 結果をファイルに保存
+docsref web list --output json > web-docs.json
 ```
 
 ## Claude Code での接続
@@ -164,6 +283,48 @@ GrepDocs(pattern: string, ignoreCase?: boolean)
 
 ドキュメント内を正規表現で検索します。
 
+### 6. Webページ取り込みツール
+
+#### fetch_web_page - 単一ページの取り込み
+
+```typescript
+fetch_web_page(url: string, category?: string, tags?: string)
+```
+
+- **url**: 取り込むWebページのURL
+- **category**: カテゴリ（例: `"refactoring"`, `"code-smells"`）
+- **tags**: タグ（カンマ区切り）
+
+例：
+```
+fetch_web_page("https://refactoring.guru/refactoring/smells", "code-smells")
+```
+
+#### fetch_web_pages_batch - 複数ページの一括取り込み
+
+```typescript
+fetch_web_pages_batch(urls: string, category?: string)
+```
+
+- **urls**: カンマ区切りのURL一覧
+- **category**: すべてのドキュメントに適用するカテゴリ
+
+#### list_web_docs - 取り込み済みドキュメントの一覧
+
+```typescript
+list_web_docs(category?: string)
+```
+
+カテゴリでフィルタリングして、取り込み済みのWebドキュメントを一覧表示します。
+
+#### suggest_refactoring_resources - おすすめリソース
+
+```typescript
+suggest_refactoring_resources()
+```
+
+リファクタリングやコードスメルについての人気リソースを提案します。
+
 ## Submodule の管理
 
 ### すべての submodule を最新に更新
@@ -201,6 +362,60 @@ git commit -m "Update R3 to latest version"
 - **UniVRM**: VRM implementation for Unity (https://github.com/vrm-c/UniVRM)
 - **vrm-specification**: VRM format specification (https://github.com/vrm-c/vrm-specification)
 
+## Webドキュメントの管理
+
+### リファクタリング資料の取り込み
+
+Webページ取り込み機能を使用して、リファクタリングやコードスメルに関する参考資料をローカルに保存できます。
+
+#### 使用例
+
+1. **推奨リソースを確認**
+```
+suggest_refactoring_resources()
+```
+
+2. **単一ページの取り込み**
+```
+fetch_web_page("https://refactoring.guru/refactoring/smells", "code-smells")
+```
+
+3. **複数ページの一括取り込み**
+```
+fetch_web_pages_batch("https://refactoring.guru/refactoring/smells,https://refactoring.guru/refactoring/techniques", "refactoring")
+```
+
+4. **取り込み済みドキュメントの確認**
+```
+list_web_docs()
+list_web_docs("code-smells")  # カテゴリでフィルタリング
+```
+
+5. **取り込んだドキュメントの閲覧**
+```
+GetDoc("docs/web/code-smells/refactoring.guru-refactoring-smells.md")
+```
+
+### 保存構造
+
+取り込まれたWebドキュメントは以下の構造で保存されます：
+
+```
+docs/web/
+├── refactoring/          # リファクタリングテクニック
+├── code-smells/          # コードスメル
+├── design-patterns/      # デザインパターン
+├── clean-code/           # クリーンコード
+└── design-principles/    # 設計原則
+```
+
+### 特徴
+
+- **自動クリーニング**: 広告、ナビゲーション、コメントセクションを自動除去
+- **メタデータ保存**: ソースURL、ダウンロード日時を記録
+- **カテゴリ分類**: ドキュメントをカテゴリ別に整理
+- **オフライン参照**: 一度取り込めばインターネット接続なしで参照可能
+
 ## 技術仕様
 
 ### アーキテクチャ
@@ -221,6 +436,16 @@ git commit -m "Update R3 to latest version"
    - .gitignore パターンの解析と適用
    - スマートフィルタリング機能
    - バイナリファイルの自動検出
+
+4. **WebPageDownloader**
+   - HTTPリクエストの処理とリトライロジック
+   - 圧縮コンテンツの自動展開
+   - タイムアウト管理
+
+5. **HtmlToMarkdownConverter**
+   - HTMLからMarkdownへの変換
+   - 不要な要素の自動除去
+   - メインコンテンツの抽出
 
 ### スマートフィルタリング詳細
 

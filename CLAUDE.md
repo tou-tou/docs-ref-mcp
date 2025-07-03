@@ -8,7 +8,7 @@ This is a C# MCP (Model Context Protocol) server that provides efficient access 
 
 ## Architecture
 
-The project follows a modular architecture with HTTP-based MCP implementation:
+The project follows a modular architecture with HTTP-based MCP implementation and CLI support:
 
 ### Core Components
 
@@ -28,20 +28,59 @@ The project follows a modular architecture with HTTP-based MCP implementation:
    - Tools: ListDocs, ListDocsSummary, ListDocsTree, GetDoc, GrepDocs
    - Returns summaries by default to avoid token limits
 
+4. **WebTools** (`Tools/`)
+   - Web page fetching and conversion tools
+   - Tools: fetch_web_page, fetch_web_pages_batch, list_web_docs, suggest_refactoring_resources
+   - Converts HTML to clean Markdown for offline reference
+
+5. **WebPageDownloader** (`Core/`)
+   - HTTP client with retry logic and timeout handling
+   - Supports gzip/deflate compression
+   - Configurable via environment variables
+
+6. **HtmlToMarkdownConverter** (`Core/`)
+   - Uses HtmlAgilityPack and ReverseMarkdown libraries
+   - Removes ads, navigation, and other unwanted elements
+   - Extracts main content from article/main tags
+
+### CLI Components
+
+7. **CliCommands** (`Cli/`)
+   - Root command and subcommand definitions using System.CommandLine
+   - Handles command routing and argument parsing
+   - Supports both text and JSON output formats
+
+8. **WebCommands** (`Cli/`)
+   - CLI wrapper for WebTools functionality
+   - Handles web page fetching operations from command line
+   - Formats output for console display
+
+9. **DocCommands** (`Cli/`)
+   - CLI wrapper for DocTools functionality
+   - Provides document search and retrieval from command line
+   - Supports JSON output for scripting
+
 ## Build and Run Commands
 
 ```bash
 # Build the project
 dotnet build DocsRef.csproj
 
-# Run the server (default port 7334)
+# Run in server mode (default when no arguments)
 dotnet run
+
+# Run in CLI mode
+dotnet run -- web suggest
+dotnet run -- docs grep "pattern"
 
 # Run with custom settings
 DOCS_FOLDERS=repos/UniVRM MCP_PORT=8080 dotnet run
 
 # Publish self-contained executable
 dotnet publish -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o ./publish
+
+# Use published executable
+./publish/DocsRef web fetch https://example.com/article --category tutorials
 ```
 
 ## Environment Variables
@@ -53,6 +92,10 @@ Critical variables that affect server behavior:
 - `DOCS_RESPECT_GITIGNORE`: Respect .gitignore patterns (default: true)
 - `DOCS_FOLDERS`: Comma-separated folders to load (default: all folders in docs/)
 - `MCP_PORT`: Server port (default: 7334)
+- `WEB_CACHE_DIR`: Directory for web documents (default: docs/web)
+- `WEB_USER_AGENT`: User agent for HTTP requests
+- `WEB_TIMEOUT`: HTTP request timeout in seconds (default: 30)
+- `WEB_MAX_RETRIES`: Maximum retry attempts (default: 3)
 
 ## Managing Submodules
 
@@ -106,5 +149,63 @@ The .csproj explicitly excludes `docs/**` from compilation to prevent submodule 
 
 1. Submodules are readonly references - don't modify files in `docs/repos/`
 2. Manual documentation goes in `docs/manual/`
-3. Server logs to console - use `Logging__LogLevel__Default=Debug` for verbose output
-4. The server automatically detects and excludes binary files and build artifacts
+3. Web-sourced documentation goes in `docs/web/` organized by category
+4. Server logs to console - use `Logging__LogLevel__Default=Debug` for verbose output
+5. The server automatically detects and excludes binary files and build artifacts
+
+## Web Tools Usage
+
+The web tools allow downloading and converting web pages to Markdown for offline reference:
+
+1. **Check suggested resources**: `suggest_refactoring_resources()`
+2. **Download single page**: `fetch_web_page(url, category, tags)`
+3. **Download multiple pages**: `fetch_web_pages_batch(urls, category)`
+4. **List downloaded docs**: `list_web_docs(category)`
+5. **Read downloaded doc**: `GetDoc("docs/web/category/filename.md")`
+
+Downloaded documents include metadata (source URL, download date) and are cleaned of ads/navigation.
+
+## CLI Mode Usage
+
+The application supports dual-mode operation:
+- **No arguments**: Runs as MCP server (default)
+- **With arguments**: Runs as CLI tool
+
+### CLI Commands
+
+```bash
+# Web operations
+docsref web fetch <url> [--category <cat>] [--tags <tags>] [--output json]
+docsref web fetch-batch <urls> [--category <cat>] [--output json]
+docsref web list [--category <cat>] [--output json]
+docsref web suggest [--output json]
+
+# Document operations
+docsref docs list [--pattern <pat>] [--directory <dir>] [--max <n>] [--output json]
+docsref docs summary [--output json]
+docsref docs tree [--directory <dir>] [--depth <d>] [--output json]
+docsref docs get <path> [--page <p>] [--output json]
+docsref docs grep <pattern> [--case-sensitive] [--output json]
+
+# Server mode
+docsref server [--port <port>]
+```
+
+### Scripting with JSON Output
+
+The `--output json` flag enables structured output for scripting:
+
+```bash
+# Extract file names from search results
+dotnet run -- docs grep "TODO" --output json | jq '.files[].file'
+
+# Get all web documents in a category
+dotnet run -- web list --category "refactoring" --output json | jq '.files[]'
+```
+
+### Shell Script Examples
+
+See `scripts/examples/` for practical examples:
+- `fetch-refactoring-resources.sh` - Batch download refactoring materials
+- `search-async-patterns.sh` - Search for async patterns in code
+- `batch-operations.sh` - Complex batch processing example

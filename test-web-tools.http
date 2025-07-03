@@ -1,0 +1,89 @@
+### Test Web Tools Functionality
+### This file can be used with REST clients that support .http files
+
+# Test single page fetch
+POST http://127.0.0.1:7334/mcp/
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "FetchWebPage",
+    "arguments": {
+      "url": "https://refactoring.guru/refactoring/smells/long-method"
+    }
+  },
+  "id": 1
+}
+
+###
+
+# Test batch fetch
+POST http://127.0.0.1:7334/mcp/
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "FetchWebPageBatch",
+    "arguments": {
+      "urls": "https://refactoring.guru/refactoring/smells/long-method,https://refactoring.guru/refactoring/techniques/extract-method"
+    }
+  },
+  "id": 2
+}
+
+###
+
+# Search for refactoring resources
+POST http://127.0.0.1:7334/mcp/
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "SearchRefactoringResources",
+    "arguments": {
+      "query": "code smells",
+      "maxResults": 3
+    }
+  },
+  "id": 3
+}
+
+###
+
+# List cached pages
+POST http://127.0.0.1:7334/mcp/
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "ListCachedPages",
+    "arguments": {}
+  },
+  "id": 4
+}
+
+###
+
+# Clear old cache entries
+POST http://127.0.0.1:7334/mcp/
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "ClearWebCache",
+    "arguments": {
+      "clearAll": false
+    }
+  },
+  "id": 5
+}

@@ -13,3 +13,18 @@
 [submodule "docs/repos/VContainer"]
 	path = docs/repos/VContainer
 	url = git@github.com:hadashiA/VContainer.git
+[submodule "docs/docs/repos/clean-code-dotnet"]
+	path = docs/docs/repos/clean-code-dotnet
+	url = git@github.com:thangchung/clean-code-dotnet.git
+[submodule "docs/docs/repos/DesignPatterns"]
+	path = docs/docs/repos/DesignPatterns
+	url = git@github.com:abishekaditya/DesignPatterns.git
+[submodule "docs/docs/repos/design-patterns-csharp"]
+	path = docs/docs/repos/design-patterns-csharp
+	url = git@github.com:RefactoringGuru/design-patterns-csharp.git
+[submodule "docs/docs/repos/design-patterns-for-humans"]
+	path = docs/docs/repos/design-patterns-for-humans
+	url = git@github.com:kamranahmedse/design-patterns-for-humans.git
+[submodule "docs/docs/repos/CleanArchitecture"]
+	path = docs/docs/repos/CleanArchitecture
+	url = git@github.com:ardalis/CleanArchitecture.git
