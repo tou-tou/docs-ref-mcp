@@ -44,6 +44,9 @@ services.AddSingleton<WebPageDownloader>();
 services.AddSingleton<HtmlToMarkdownConverter>();
 services.AddSingleton<WebTools>();
 
+// Configure tool services
+services.AddSingleton<DocTools>();
+
 // Configure DocumentManager
 services.AddSingleton<DocumentManager>(sp =>
 {
@@ -89,9 +92,6 @@ var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
 logger.LogInformation("Loading documents...");
 documentManager.LoadDocuments();
 logger.LogInformation($"Loaded {documentManager.GetDocumentCount()} documents");
-
-// Initialize static tools
-DocTools.Initialize(documentManager);
 
 // Initialize web tools to ensure directory creation
 var webTools = serviceProvider.GetRequiredService<WebTools>();

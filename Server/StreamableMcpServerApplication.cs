@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
 using DocsRef.Core;
+using System.Linq;
 
 namespace DocsRef.Server;
 
@@ -65,6 +66,10 @@ public sealed class StreamableMcpServerApplication : IDisposable
         var webTools = _serviceProvider.GetRequiredService<DocsRef.Tools.WebTools>();
         builder.AddSingleton(webTools);
         
+        // Copy DocTools service
+        var docTools = _serviceProvider.GetRequiredService<DocsRef.Tools.DocTools>();
+        builder.AddSingleton(docTools);
+        
         // Copy logging
         builder.AddLogging(loggingBuilder =>
         {
@@ -81,9 +86,16 @@ public sealed class StreamableMcpServerApplication : IDisposable
             .WithStreamServerTransport(
                 clientToServerPipe.Reader.AsStream(),
                 serverToClientPipe.Writer.AsStream())
-            .WithToolsFromAssembly();
+            .WithToolsFromAssembly(typeof(DocsRef.Tools.DocTools).Assembly);
 
-        _logger.LogInformation("Loaded MCP tools from assembly");
+        _logger.LogInformation($"Loaded MCP tools from assembly: {typeof(DocsRef.Tools.DocTools).Assembly.GetName().Name}");
+        
+        // Log registered tool types
+        var toolAssembly = typeof(DocsRef.Tools.DocTools).Assembly;
+        var toolTypes = toolAssembly.GetTypes()
+            .Where(t => t.GetCustomAttributes(typeof(ModelContextProtocol.Server.McpServerToolTypeAttribute), false).Any())
+            .ToList();
+        _logger.LogInformation($"Found {toolTypes.Count} tool types: {string.Join(", ", toolTypes.Select(t => t.Name))}");
 
         await using var services = builder.BuildServiceProvider();
 

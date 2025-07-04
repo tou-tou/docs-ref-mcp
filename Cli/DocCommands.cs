@@ -10,26 +10,25 @@ public class DocCommands
     private readonly DocumentManager _documentManager;
     private readonly ILogger<DocCommands> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
+    private readonly DocTools _docTools;
 
-    public DocCommands(DocumentManager documentManager, ILogger<DocCommands> logger)
+    public DocCommands(DocumentManager documentManager, ILogger<DocCommands> logger, DocTools docTools)
     {
         _documentManager = documentManager;
         _logger = logger;
+        _docTools = docTools;
         _jsonOptions = new JsonSerializerOptions 
         { 
             WriteIndented = true,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
-        
-        // Initialize DocTools
-        DocTools.Initialize(documentManager);
     }
 
     public async Task ListDocs(string? pattern, string? directory, int maxResults, OutputFormat output)
     {
         try
         {
-            var result = await DocTools.ListDocs(pattern, directory, maxResults);
+            var result = await _docTools.ListDocs(pattern, directory, maxResults);
             
             if (output == OutputFormat.Json)
             {
@@ -77,7 +76,7 @@ public class DocCommands
     {
         try
         {
-            var result = await DocTools.ListDocsSummary();
+            var result = await _docTools.ListDocsSummary();
             
             if (output == OutputFormat.Json)
             {
@@ -136,7 +135,7 @@ public class DocCommands
     {
         try
         {
-            var result = await DocTools.ListDocsTree(directory, maxDepth);
+            var result = await _docTools.ListDocsTree(directory, maxDepth);
             
             if (output == OutputFormat.Json)
             {
@@ -169,7 +168,7 @@ public class DocCommands
     {
         try
         {
-            var result = await DocTools.GetDoc(path, page ?? 1);
+            var result = await _docTools.GetDoc(path, page ?? 1);
             
             if (output == OutputFormat.Json)
             {
@@ -228,7 +227,7 @@ public class DocCommands
     {
         try
         {
-            var result = await DocTools.GrepDocs(pattern, ignoreCase);
+            var result = await _docTools.GrepDocs(pattern, ignoreCase);
             
             if (output == OutputFormat.Json)
             {
