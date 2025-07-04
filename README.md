@@ -148,14 +148,21 @@ dotnet run -- server --port 7334
 
 ```bash
 # Linux/Mac用
-dotnet publish -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o ./publish
+dotnet publish DocsRef.csproj -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o ./publish
 
 # Windows用
-dotnet publish -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o ./publish
+dotnet publish DocsRef.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o ./publish
 
 # 使用例
 ./publish/DocsRef web fetch https://example.com/article
 ```
+
+**注意**: フォルダに複数のプロジェクトファイルがある場合は、`DocsRef.csproj` を明示的に指定する必要があります。
+
+発行された実行可能ファイル：
+- **サイズ**: 約70MB（.NET ランタイムを含む自己完結型）
+- **.NET 不要**: ターゲットOSで直接実行可能
+- **単一ファイル**: すべての依存関係が1つのファイルに統合
 
 ### CLI コマンド一覧
 
@@ -501,6 +508,19 @@ pkill -f DocsRef
 
 # サーバーを再起動
 dotnet run
+```
+
+### ビルドエラー: 複数のプロジェクトファイル
+
+```
+MSBUILD : error MSB1011: Specify which project or solution file to use...
+```
+
+このエラーが出た場合は、プロジェクトファイルを明示的に指定してください：
+```bash
+dotnet build DocsRef.csproj
+dotnet run --project DocsRef.csproj
+dotnet publish DocsRef.csproj -c Release
 ```
 
 ## ライセンス

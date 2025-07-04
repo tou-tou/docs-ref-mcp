@@ -61,6 +61,10 @@ public sealed class StreamableMcpServerApplication : IDisposable
         var htmlToMarkdownConverter = _serviceProvider.GetRequiredService<HtmlToMarkdownConverter>();
         builder.AddSingleton(htmlToMarkdownConverter);
         
+        // Copy WebTools service
+        var webTools = _serviceProvider.GetRequiredService<DocsRef.Tools.WebTools>();
+        builder.AddSingleton(webTools);
+        
         // Copy logging
         builder.AddLogging(loggingBuilder =>
         {
@@ -162,7 +166,7 @@ public sealed class StreamableMcpServerApplication : IDisposable
                                     protocolVersion = "0.1.0",
                                     capabilities = new
                                     {
-                                        tools = new { },
+                                        tools = new { listChanged = true },
                                         logging = new { }
                                     }
                                 };

@@ -77,11 +77,27 @@ dotnet run -- docs grep "pattern"
 DOCS_FOLDERS=repos/UniVRM MCP_PORT=8080 dotnet run
 
 # Publish self-contained executable
-dotnet publish -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o ./publish
+dotnet publish DocsRef.csproj -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o ./publish
 
 # Use published executable
 ./publish/DocsRef web fetch https://example.com/article --category tutorials
+
+# Windows publish
+dotnet publish DocsRef.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o ./publish-win
+
+# macOS publish (Intel)
+dotnet publish DocsRef.csproj -c Release -r osx-x64 --self-contained -p:PublishSingleFile=true -o ./publish-mac
+
+# macOS publish (Apple Silicon)
+dotnet publish DocsRef.csproj -c Release -r osx-arm64 --self-contained -p:PublishSingleFile=true -o ./publish-mac-arm
 ```
+
+### Published Executable Details
+
+- **File size**: ~70MB (includes .NET runtime)
+- **Self-contained**: No .NET installation required on target system
+- **Single file**: All dependencies bundled into one executable
+- **Cross-platform**: Publish for different OS/architectures
 
 ## Environment Variables
 
