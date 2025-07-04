@@ -50,9 +50,27 @@ public sealed class StreamableMcpServerApplication : IDisposable
 
         var builder = new ServiceCollection();
         
-        // Copy services from the main service provider
+        // Copy required services from the main service provider
         var documentManager = _serviceProvider.GetRequiredService<DocumentManager>();
         builder.AddSingleton(documentManager);
+        
+        // Copy web-related services
+        var webPageDownloader = _serviceProvider.GetRequiredService<WebPageDownloader>();
+        builder.AddSingleton(webPageDownloader);
+        
+        var htmlToMarkdownConverter = _serviceProvider.GetRequiredService<HtmlToMarkdownConverter>();
+        builder.AddSingleton(htmlToMarkdownConverter);
+        
+        // Copy logging
+        builder.AddLogging(loggingBuilder =>
+        {
+            loggingBuilder.AddConsole();
+            var logLevelStr = Environment.GetEnvironmentVariable("LOGGING__LOGLEVEL__DEFAULT") ?? "Information";
+            if (Enum.TryParse<LogLevel>(logLevelStr, true, out var logLevel))
+            {
+                loggingBuilder.SetMinimumLevel(logLevel);
+            }
+        });
         
         // Add MCP server
         builder.AddMcpServer()
