@@ -28,3 +28,6 @@
 [submodule "docs/docs/repos/CleanArchitecture"]
 	path = docs/docs/repos/CleanArchitecture
 	url = git@github.com:ardalis/CleanArchitecture.git
+[submodule "docs/repos/InstantReplay"]
+	path = docs/repos/InstantReplay
+	url = https://github.com/CyberAgentGameEntertainment/InstantReplay.git
